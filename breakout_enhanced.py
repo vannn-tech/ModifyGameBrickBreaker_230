@@ -299,6 +299,7 @@ class Game:
 
         # Bind mouse for restart button clicks
         self.canvas.bind('<Button-1>', self.on_click)
+        self.canvas.bind_all('<space>', self.on_space)
 
         # Start loop
         self.loop()
@@ -341,6 +342,12 @@ class Game:
                 self.reset_game()
                 return
 
+    def on_space(self, event=None):
+        if self.game_over_flag:
+            self.reset_game()
+        elif self.menu_id:
+            self.start_game()
+
     # ----------------------------
     def start_game(self):
         self.destroy_menu()
@@ -351,6 +358,7 @@ class Game:
 
     def reset_game(self):
         # Reset entire game
+        self.canvas.delete('gameover')
         self.score = 0
         self.lives = 3
         self.level = 1
@@ -665,7 +673,7 @@ class Game:
         if self.score > self.highscore:
             self.highscore = self.score
             save_highscore(self.score)
-        self.canvas.create_text(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, text=f'GAME OVER\nScore: {self.score}', fill='#f87171', font=('Helvetica', 28))
+        self.canvas.create_text(WINDOW_WIDTH/2, WINDOW_HEIGHT/2, text=f'GAME OVER\nScore: {self.score}', fill='#f87171', font=('Helvetica', 28), tag='gameover')
 
 # ----------------------------
 # Run
