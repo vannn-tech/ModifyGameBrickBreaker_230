@@ -504,6 +504,12 @@ class Game:
     # ----------------------------
     def handle_ball_collisions(self, ball):
         x1, y1, x2, y2 = ball.pos()
+        if hasattr(self, 'shield') and ball.vy > 0 and y2 >= WINDOW_HEIGHT - 20:
+            self.canvas.move(ball.id, 0, WINDOW_HEIGHT - 20 - y2)
+            ball.reflect_y()
+            play_sound('hit')
+            x1, y1, x2, y2 = ball.pos()
+
         # bottom check
         if y2 >= WINDOW_HEIGHT:
             # remove this ball
