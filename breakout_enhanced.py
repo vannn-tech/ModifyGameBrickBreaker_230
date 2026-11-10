@@ -418,7 +418,8 @@ class Game:
                 y = r * (BRICK_HEIGHT + BRICK_GAP) + 60
                 color = BRICK_COLORS[r % len(BRICK_COLORS)]
                 id = self.canvas.create_rectangle(x+1, y+1, x+brick_w-1, y+BRICK_HEIGHT-1, fill=color, outline='')
-                self.bricks.append({'id': id, 'hits': 1 + (r // 2), 'color': color})
+                hits = 1 + (r // 2)
+                self.bricks.append({'id': id, 'hits': hits, 'max_hits': hits, 'color': color})
 
     def spawn_ball(self):
         # place ball above paddle
@@ -552,35 +553,32 @@ class Game:
                 # collision
                 play_sound('brick')
                 self.spawn_particles((bx1+bx2)/2, (by1+by2)/2, br['color'])
-                br['hits'] -= 1
-                # score depends on hits initial value - simpler: +10 per brick
-                self.score += 10
-                self.update_hud()
-
-                if random.random() < POWERUP_CHANCE:
-                    pu = PowerUp(self.canvas, (bx1+bx2)/2, (by1+by2)/2)
-                    self.powerups.append(pu)
-
-                # remove or recolor
-                if br['hits'] <= 0:
-                    try:
-                        self.canvas.delete(br['id'])
-                    except Exception:
-                        pass
-                    try:
-                        self.bricks.remove(br)
-                    except ValueError:
-                        pass
-                else:
-                    # darken color
-                    try:
-                        self.canvas.itemconfig(br['id'], fill=br['color'])
-                    except Exception:
-                        pass
+                if self.damage_brick(br):
+                    self.score += 10
+                    self.update_hud()
+                    if random.random() < POWERUP_CHANCE:
+                        pu = PowerUp(self.canvas, (bx1+bx2)/2, (by1+by2)/2)
+                        self.powerups.append(pu)
 
                 # reflect ball - simple reflect y
                 ball.vy *= -1
                 break
+
+    def damage_brick(self, brick):
+        brick['hits'] -= 1
+        if brick['hits'] <= 0:
+            self.canvas.delete(brick['id'])
+            self.bricks.remove(brick)
+            return True
+
+        brightness = 0.4 + 0.6 * brick['hits'] / brick['max_hits']
+        color = brick['color']
+        damaged_color = '#' + ''.join(
+            f'{int(int(color[i:i + 2], 16) * brightness):02x}'
+            for i in (1, 3, 5)
+        )
+        self.canvas.itemconfig(brick['id'], fill=damaged_color)
+        return False
 
     # ----------------------------
     def spawn_particles(self, x, y, color):
@@ -652,16 +650,9 @@ class Game:
             if not (bx2 < bx1b or bx1 > bx2b or by2 < by1b or by1 > by2b):
                 # hit
                 self.spawn_particles((bx1b+bx2b)/2, (by1b+by2b)/2, br['color'])
-                self.score += 10
-                self.update_hud()
-                try:
-                    self.canvas.delete(br['id'])
-                except Exception:
-                    pass
-                try:
-                    self.bricks.remove(br)
-                except ValueError:
-                    pass
+                if self.damage_brick(br):
+                    self.score += 10
+                    self.update_hud()
                 try:
                     self.canvas.delete(bullet.id)
                 except Exception:
