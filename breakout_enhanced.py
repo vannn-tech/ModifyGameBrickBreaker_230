@@ -190,15 +190,26 @@ class Paddle:
                                           self.x + self.width/2, self.y + self.height/2,
                                           fill=PADDLE_COLOR, outline='')
         self.speed = 0
+        self.keys_down = set()
         self.bind_keys()
         self.laser_ready = False
 
     def bind_keys(self):
-        self.canvas.bind_all('<KeyPress-Left>', lambda e: self.set_speed(-10))
-        self.canvas.bind_all('<KeyPress-Right>', lambda e: self.set_speed(10))
-        self.canvas.bind_all('<KeyRelease-Left>', lambda e: self.set_speed(0))
-        self.canvas.bind_all('<KeyRelease-Right>', lambda e: self.set_speed(0))
-        self.canvas.bind_all('<space>', lambda e: None)  # used by menu
+        self.canvas.bind_all('<KeyPress-Left>', lambda e: self.set_key('Left', True))
+        self.canvas.bind_all('<KeyPress-Right>', lambda e: self.set_key('Right', True))
+        self.canvas.bind_all('<KeyRelease-Left>', lambda e: self.set_key('Left', False))
+        self.canvas.bind_all('<KeyRelease-Right>', lambda e: self.set_key('Right', False))
+
+    def set_key(self, key, pressed):
+        if pressed:
+            self.keys_down.add(key)
+        else:
+            self.keys_down.discard(key)
+        self.set_speed(
+            -10 if 'Left' in self.keys_down and 'Right' not in self.keys_down
+            else 10 if 'Right' in self.keys_down and 'Left' not in self.keys_down
+            else 0
+        )
 
     def set_speed(self, v):
         self.speed = v
