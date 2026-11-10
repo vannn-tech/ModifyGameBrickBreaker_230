@@ -554,8 +554,7 @@ class Game:
                 play_sound('brick')
                 self.spawn_particles((bx1+bx2)/2, (by1+by2)/2, br['color'])
                 if self.damage_brick(br):
-                    self.score += 10
-                    self.update_hud()
+                    self.add_score(10)
                     if random.random() < POWERUP_CHANCE:
                         pu = PowerUp(self.canvas, (bx1+bx2)/2, (by1+by2)/2)
                         self.powerups.append(pu)
@@ -579,6 +578,13 @@ class Game:
         )
         self.canvas.itemconfig(brick['id'], fill=damaged_color)
         return False
+
+    def add_score(self, points):
+        self.score += points
+        if self.score > self.highscore:
+            self.highscore = self.score
+            save_highscore(self.highscore)
+        self.update_hud()
 
     # ----------------------------
     def spawn_particles(self, x, y, color):
@@ -651,8 +657,7 @@ class Game:
                 # hit
                 self.spawn_particles((bx1b+bx2b)/2, (by1b+by2b)/2, br['color'])
                 if self.damage_brick(br):
-                    self.score += 10
-                    self.update_hud()
+                    self.add_score(10)
                 try:
                     self.canvas.delete(bullet.id)
                 except Exception:
